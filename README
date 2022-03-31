@@ -1,3 +1,7 @@
+This same behavior happens for all new Vars in core added in 1.11 (update-vals/keys, iteration, etc.)
+
+---
+
 Deps should have 1.10.3 as dep.
 
 In shell:
@@ -46,4 +50,29 @@ Rerunning the REPL with `clj`
     "/tmp/A"
     user=> o/abs
     #object[fogus.oddity$abs 0x7b60c3e "fogus.oddity$abs@7b60c3e"]
+
+---
+
+Some interesting observations while running 1.11.0:
+
+    (get (ns-map 'fogus.oddity) 'abs)
+    #'clojure.core/abs
+
+In 1.10.3 this is #'fogus.oddity/abs
+
+If I add a `(:gen-class)` directive to the `fogus.oddity` namespace, then compile with 1.10.3 and run with 1.11.0 I see slightly different behavior.
+
+    ;; Clojure 1.11.0
+    user=> (require '[fogus.oddity :as o])
+    WARNING: abs already refers to: #'clojure.core/abs in namespace: fogus.oddity, being replaced by: #'fogus.oddity/abs
+    nil
+    user=> (o/abs "A")
+    Execution error (IllegalStateException) at user/eval3 (REPL:1).
+    Attempting to call unbound fn: #'fogus.oddity/abs
+    user=> (get (ns-map 'fogus.oddity) 'abs)
+    #'fogus.oddity/abs
+
+That is, the override warning happens and the Var is mapped in the ns but the Var is still reported as unbound.
+
+The same behavior is observed if I add a main to fogus.oddity that calls its abs and that is compiled with 1.10.3 and a jar created and run with 1.11.0.
 
