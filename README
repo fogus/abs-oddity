@@ -29,6 +29,8 @@ In REPL
     Syntax error compiling at (REPL:0:0).
     No such var: o/abs
 
+**NOTE: There was _NO_ warning about abs override when the `require` was called.**
+
 Now while still depending on 1.11.0, clean and recompile
 
     clj -T:build clean
