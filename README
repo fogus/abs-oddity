@@ -1,0 +1,47 @@
+Deps should have 1.10.3 as dep.
+
+In shell:
+
+    clj -T:build compile-clj
+    clj
+
+In REPL
+
+    ;; Clojure 1.10.3
+    user=> (require '[fogus.oddity :as o])
+    nil
+    user=> (o/abs "A")
+    "/tmp/A"
+    user=> o/abs
+    #object[fogus.oddity$abs 0x286b39c2 "fogus.oddity$abs@286b39c2"]
+
+Change deps.edn to use Clojure 1.11.0, then relaunch `clj`
+
+In REPL
+
+    ;; Clojure 1.11.0
+    user=> (require '[fogus.oddity :as o])
+    nil
+    user=> (o/abs "A")
+    Syntax error compiling at (REPL:1:1).
+    No such var: o/abs
+    user=> o/abs
+    Syntax error compiling at (REPL:0:0).
+    No such var: o/abs
+
+Now while still depending on 1.11.0, clean and recompile
+
+    clj -T:build clean
+    clj -T:build compile-clj
+
+Rerunning the REPL with `clj`
+
+    ;; Clojure 1.11.0
+    user=> (require '[fogus.oddity :as o])
+    WARNING: abs already refers to: #'clojure.core/abs in namespace: fogus.oddity, being replaced by: #'fogus.oddity/abs
+    nil
+    user=> (o/abs "A")
+    "/tmp/A"
+    user=> o/abs
+    #object[fogus.oddity$abs 0x7b60c3e "fogus.oddity$abs@7b60c3e"]
+
