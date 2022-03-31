@@ -1,4 +1,6 @@
-This same behavior happens for all new Vars in core added in 1.11 (update-vals/keys, iteration, etc.)
+* This same behavior happens for all new Vars in core added in 1.11 (update-vals/keys, iteration, etc.)
+
+* This same behavior is observable if a use different versions of Clojure and try to override a core function that is new to the later version. For example, I ran a similar set of tests for a function called `add-tap` (added in 1.10) compiled with 1.9 and run with 1.10.
 
 ---
 
