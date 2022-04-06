@@ -14,20 +14,20 @@ The call to the `-main` function need never occur.
 # non -main case
 
 LOAD Phase
-----------
+==========
 
 - `#'fogus.oddity/abs` created
 - `#'fogus.oddity/abs` interned
 - `#'fogus.oddity/abs` has its root to new `fogus.oddity$abs` instance
 
 REQUIRE Phase
--------------
+=============
 
 - code `(require 'fogus.oddity)`
 - `Namespace.reference` resets the mapping for `abs` in fogus.oddity's `mappings` from `#'fogus.oddity/abs` to `#'clojure.core/abs`
 
 Symbol->Var Resolution Phase
-----------------------------
+============================
 
 - code `fogus.oddity/abs`
 - Sybol resolution in `Compiler/resolveIn` fails because it calls `Namespace.findInternedVar` which compares ns name and var's ns field and finds a mismatch
@@ -36,14 +36,14 @@ Symbol->Var Resolution Phase
 # -main case
 
 LOAD Phase
-----------
+==========
 
 - `#'fogus.oddity/abs` created
 - `#'fogus.oddity/abs` interned
 - `#'fogus.oddity/abs` has its root to new `fogus.oddity$abs` instance
 
 REQUIRE Phase
--------------
+=============
 
 - code `(require 'fogus.oddity)`
 - `Namespace.reference` resets the mapping for `abs` in fogus.oddity's `mappings` from `#'fogus.oddity/abs` to `#'clojure.core/abs`
@@ -53,14 +53,13 @@ REQUIRE Phase
 - `Namespace.intern` reports `WARNING: abs already refers to: #'clojure.core/abs in namespace: fogus.oddity, being replaced by: #'fogus.oddity/abs`
 
 Symbol->Var Resolution Phase
-----------------------------
+============================
 
 - code `fogus.oddity/abs`
 - Symbol resolution returns `#'fogus.oddity/abs` with unbound root
 
 Call Phase
-----------
+==========
 
 - code `(fogus.oddity/abs "a")`
 - Evaluation results in `Attempting to call unbound fn: #'fogus.oddity/abs` error
-
