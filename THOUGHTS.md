@@ -6,60 +6,59 @@ with the core Var.
 
 There are two manifestations of this problem depending on certain AOT conditions:
 
-1) The namespace `fogus.oddity` containing the clashing function `abs` is compiled with or without `:genclass`
-2) The namespace `fogus.oddity` containing the clashing function `abs` is compiled with `:genclass` and also contains a `-main` fn
+1) The namespace `fogus.oddity` containing a clashing function _definition only_ `abs`
+2) The namespace `fogus.oddity` containing the clashing function `abs` definition and internal calls to it
 
-The call to the `-main` function need never occur.
+## Background
 
-# **Manifestatiion #1 - non `-main` case**
+Related ticket https://clojure.atlassian.net/browse/CLJ-1241 seems to have originally encountered this problem but the fix was not a fix.
 
-LOAD Phase
-==========
+https://ask.clojure.org/index.php/11672/fastmath-errors-in-1-11
 
-- `#'fogus.oddity/abs` created
-- `#'fogus.oddity/abs` interned
-- `#'fogus.oddity/abs` has its root to new `fogus.oddity$abs` instance
+### **Manifestatiion #1 - Definition Only Case**
 
-REQUIRE Phase
-=============
+#### REQUIRE Phase
 
 - code `(require 'fogus.oddity)`
+- `require` calls `load-lib` which initiates AOT code load `fogus.oddity__init` which initializes `fogus.oddity$abs` function class
+- AOT `#'fogus.oddity/abs` created and interned with `RT.var`
+- AOT `#'fogus.oddity/abs` has its root bound to new `fogus.oddity$abs` function instance
+- `fogus.oddity__init` calls `refer` with every sym->var mapping in clojure.core against `fogus.oddity` namespace
 - `Namespace.reference` resets the mapping for `abs` in fogus.oddity's `mappings` from `#'fogus.oddity/abs` to `#'clojure.core/abs`
 
-Symbol->Var Resolution Phase
-============================
+#### Symbol->Var Resolution Phase
 
 - code `fogus.oddity/abs`
-- Sybol resolution in `Compiler/resolveIn` fails because it calls `Namespace.findInternedVar` which compares ns name and var's ns field and finds a mismatch
+- Symbol resolution in `Compiler/resolveIn` fails because it calls `Namespace.findInternedVar` which compares `fogus.oddity` name and `#'clojure.core/abs` `ns` field and finds a mismatch
 - Compiler reports `No such var: fogus.oddity/abs`
 
-# **Manifestatiion #2 - `-main` case**
 
-LOAD Phase
-==========
 
-- `#'fogus.oddity/abs` created
-- `#'fogus.oddity/abs` interned
-- `#'fogus.oddity/abs` has its root to new `fogus.oddity$abs` instance
 
-REQUIRE Phase
-=============
+### **Manifestatiion #2 - Definition and Call Case (e.g. `abs` called in `-main`)**
+
+#### REQUIRE Phase
 
 - code `(require 'fogus.oddity)`
+- `require` calls `load-lib` which initiates AOT code load `fogus.oddity__init` which initializes `fogus.oddity$abs` function class
+- AOT `#'fogus.oddity/abs` created and interned with `RT.var`
+- AOT `#'fogus.oddity/abs` has its root bound to new `fogus.oddity$abs` function instance
+- `fogus.oddity__init` calls `refer` with every sym->var mapping in clojure.core against `fogus.oddity` namespace
 - `Namespace.reference` resets the mapping for `abs` in fogus.oddity's `mappings` from `#'fogus.oddity/abs` to `#'clojure.core/abs`
-- `Namespace.intern` called again
+- `fogus.oddity__init` initiates AOT code load for `fogus.oddity$_main` function class
+- `Namespace.intern` called again in `fogus.oddity$_main` function class static segment
 - `Namespace.intern` looks up var in `fogus.oddity` namespace and gets `#'clojure.core/abs`
 - Because var nses do not match, a new `#'fogus.oddity/abs` is created in `fogus.oddity` namespace with an unbound root
 - `Namespace.intern` reports `WARNING: abs already refers to: #'clojure.core/abs in namespace: fogus.oddity, being replaced by: #'fogus.oddity/abs`
 
-Symbol->Var Resolution Phase
-============================
+#### Symbol->Var Resolution Phase
 
 - code `fogus.oddity/abs`
+- Symbol resolution in `Compiler/resolveIn` succeeds because it calls `Namespace.findInternedVar` which compares `fogus.oddity` name and `#'fogus.oddity/abs` `ns` field and finds a match
 - Symbol resolution returns `#'fogus.oddity/abs` with unbound root
 
-Call Phase
-==========
+#### Call Phase
 
 - code `(fogus.oddity/abs "a")`
 - Evaluation results in `Attempting to call unbound fn: #'fogus.oddity/abs` error
+
