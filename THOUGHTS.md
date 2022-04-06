@@ -11,7 +11,7 @@ There are two manifestations of this problem depending on certain AOT conditions
 
 The call to the `-main` function need never occur.
 
-# non -main case
+# **Manifestatiion #1 - non `-main` case**
 
 LOAD Phase
 ==========
@@ -33,7 +33,7 @@ Symbol->Var Resolution Phase
 - Sybol resolution in `Compiler/resolveIn` fails because it calls `Namespace.findInternedVar` which compares ns name and var's ns field and finds a mismatch
 - Compiler reports `No such var: fogus.oddity/abs`
 
-# -main case
+# **Manifestatiion #2 - `-main` case**
 
 LOAD Phase
 ==========
