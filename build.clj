@@ -22,7 +22,7 @@
                 :version version
                 :basis basis
                 :src-dirs src})
-  (b/copy-dir {:src-dirs src
+  #_(b/copy-dir {:src-dirs src
                :target-dir class-dir})
   (b/jar {:class-dir class-dir
           :jar-file jar-file}))
